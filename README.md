@@ -34,7 +34,3 @@ A web-based application that enables users to upload files, store them in Amazon
 
 - `server.js`: Express server setup and routes.
 - `index.html`: Frontend HTML form for file uploads.
-
-## Contact
-
-For questions or feedback, contact me at [your-email@example.com](mailto:your-email@example.com).
