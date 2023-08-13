@@ -1,7 +1,7 @@
 
 AWS.config.update({
     region: 'us-east-2',
-    credentials: new AWS.Credentials('AKIAV73MFWUUBJLUBE6A', 'GjHAh+4gZuDdQnbvyHpKSG5r1f04RAFSAnqAkRLa'),
+    credentials: new AWS.Credentials('', ''),
   });
   
   // Create an S3 instance.
