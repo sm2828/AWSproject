@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cloud File Sharing Tool</title>
+</head>
+
+<body>
+    <h1>Cloud File Sharing Tool</h1>
+
+    <form id="fileUploadForm">
+        <input type="file" id="fileInput" name="file" required><br>
+        <label for="emails">Email Addresses (up to 5, comma-separated):</label><br>
+        <input type="text" id="emails" name="emails" required><br>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="status"></div>
+
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1104.0.min.js"></script>
+
+    <script>
+        AWS.config.update({
+            region: 'us-east-2',
+            credentials: new AWS.Credentials('AKIAV73MFWUUBJLUBE6A', 'GjHAh+4gZuDdQnbvyHpKSG5r1f04RAFSAnqAkRLa'),
+        });
+
+        // Create an S3 instance.
+        const s3 = new AWS.S3();
+
+        // Function to handle file upload.
+        function handleFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const emailsInput = document.getElementById('emails');
+            const file = fileInput.files[0];
+            const emailAddresses = emailsInput.value.split(',');
+
+            if (!file || !emailAddresses) {
+                alert('Please select a file and enter valid email addresses.');
+                return;
+            }
+
+            if (emailAddresses.length > 5) {
+                alert('You can only enter up to 5 email addresses.');
+                return;
+            }
+
+            // Upload the file to S3.
+            const params = {
+                Bucket: 'cloud-file-sharing-tool-bucket',
+                Key: file.name,
+                Body: file,
+            };
+
+            s3.upload(params, function (err, data) {
+                if (err) {
+                    console.error('Error uploading the file: ', err);
+                    displayStatus('Error uploading the file. Please try again.');
+                } else {
+                    const fileUrl = data.Location;
+
+                    // Send the email addresses and file URL to the backend server to store the information in DynamoDB.
+                    sendFileInfoToServer(emailAddresses, fileUrl);
+
+                    // Display success message.
+                    displayStatus('File uploaded successfully. Email with download link will be sent to the provided addresses.');
+                }
+            });
+        }
+
+        function sendFileInfoToServer(emailAddresses, fileUrl) {
+            const backendUrl = 'https://fekg2qqhhi.execute-api.us-east-2.amazonaws.com';
+
+            // Example using fetch API:
+            fetch(backendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    emails: emailAddresses,
+                    fileUrl: fileUrl,
+                }),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error sending file info to server');
+                    }
+                    // Handle successful response here if needed.
+                })
+                .catch(error => {
+                    console.error('Error sending file info to server: ', error);
+                });
+        }
+
+        // Function to display status messages on the webpage.
+        function displayStatus(message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+        }
+
+        // Add event listener to the form submit button.
+        document.getElementById('fileUploadForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            handleFileUpload();
+        });
+    </script>
+</body>
+
+</html>
